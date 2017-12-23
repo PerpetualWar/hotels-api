@@ -52,7 +52,6 @@ app.get('/hotel_api', async (req, res) => {
 
 // get specific hotel based on id
 app.get('/hotel_api/:id', async (req, res) => {
-  // console.log(req.params)
   const id = req.params.id;
 
   // if (!ObjectID.isValid(id)) {
@@ -74,10 +73,6 @@ app.get('/hotel_api/:id', async (req, res) => {
 // delete specific hotel
 app.delete('/hotel_api/:id', async (req, res) => {
   const id = req.params.id;
-
-  // if (!ObjectID.isValid(id)) {
-  //   return res.status(404).send({ message: 'Item with that ID does not exist' });
-  // }
 
   try {
     const doc = await Hotel.findByIdAndRemove(id);
