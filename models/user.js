@@ -67,6 +67,27 @@ UserSchema.statics.findByToken = async function (token) { // adding custom model
   });
 };
 
+UserSchema.statics.findByCredentials = async function (email, password) {
+  try {
+    const user = await this.findOne({ email });
+    console.log(this)
+    if (!user)
+      return Promise.reject();
+    return new Promise((resolve, reject) => {
+      bcrypt.compare(password, user.password, (err, res) => {
+        console.log(res)
+        if (res) {
+          resolve(user);
+        } else {
+          reject();
+        }
+      })
+    });
+  } catch (e) {
+    return Promise.reject();
+  }
+};
+
 UserSchema.pre('save', function (next) {  //hashing the password in mongoose middleware before saving to the db
   if (this.isModified('password')) {
     bcrypt.genSalt(10, (err, salt) => {
