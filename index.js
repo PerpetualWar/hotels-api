@@ -7,6 +7,7 @@ const { mongoose } = require('./db/mongoose');
 const { ObjectID } = require('mongodb');
 const { Hotel } = require('./models/hotel');
 const { User } = require('./models/user');
+const { authenticate } = require('./middleware/authenticate');
 
 const app = express();
 const port = 8080;
@@ -99,6 +100,10 @@ app.post('/users', async (req, res) => {
   } catch (e) {
     res.status(400).send(e);
   }
+});
+
+app.get('/users/me', authenticate, async (req, res) => {
+  res.send(req.user);
 });
 
 app.listen(port, () => {
