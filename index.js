@@ -8,6 +8,7 @@ const { ObjectID } = require('mongodb');
 const { Hotel } = require('./models/hotel');
 const { User } = require('./models/user');
 const { authenticate } = require('./middleware/authenticate');
+const { asyncErrorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const port = 8080;
@@ -73,7 +74,6 @@ app.get('/hotel_api/:id', async (req, res) => {
 // delete specific hotel
 app.delete('/hotel_api/:id', async (req, res) => {
   const id = req.params.id;
-
   try {
     const doc = await Hotel.findByIdAndRemove(id);
     if (!doc)
@@ -84,7 +84,7 @@ app.delete('/hotel_api/:id', async (req, res) => {
   }
 });
 
-app.post('/users', async (req, res) => {
+app.post('/register', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
   console.log(body);
   const user = new User(body);
@@ -97,13 +97,12 @@ app.post('/users', async (req, res) => {
   }
 });
 
-app.get('/users/me', authenticate, async (req, res) => {
+app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
 
-app.post('/users/login', async (req, res) => {
+app.post('/api-token-auth', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
-  console.log(body.password)
   try {
     const user = await User.findByCredentials(body.email, body.password);
     const token = await user.generateAuthToken();
@@ -111,6 +110,27 @@ app.post('/users/login', async (req, res) => {
   } catch (e) {
     res.status(400).send();
   }
+});
+
+app.delete('/users/me/token', authenticate, async (req, res) => {
+  try {
+    await req.user.removeToken(req.token);
+    res.status(200).send();
+  } catch (e) {
+    res.status(400).send();
+  }
+  // debugger
+//   req.user.removeToken(req.token).then(() => {
+//     rest.status(200).send();
+//   }).catch((e) => {
+//     console.log(e)
+//     res.status(400).send();
+//   });
+});
+
+app.use(function (error, req, res, next) {
+  // Gets called because of `asyncErrorHandler()` middleware
+  res.json({ message: error.message });
 });
 
 app.listen(port, () => {

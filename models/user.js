@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    require: true,
+    required: true,
     minlength: 6,
   },
   tokens: [{
@@ -49,24 +49,40 @@ UserSchema.methods.generateAuthToken = async function () { //adding custom metho
   return token;
 };
 
+UserSchema.methods.removeToken = async function (token) {
+  try {
+    return await this.update({
+      $pull: {
+        tokens: { token }
+      }
+    });
+  } catch (e) {
+    return Promise.reject();
+  }
+  // return this.update({
+  //   $pull: {
+  //     tokens: { token }
+  //   }
+  // })
+};
+
 UserSchema.statics.findByToken = async function (token) { // adding custom model method by statics
   let decoded;
 
   try {
     decoded = jwt.verify(token, 'bleh');
+    return await this.findOne({
+      _id: decoded._id,
+      'tokens.token': token,
+      'tokens.access': 'auth'
+    });
   } catch (e) {
     // return new Promise((resolve, reject) => { //valid promise call
     //   reject();
     // })
     return Promise.reject(); // shorthand for the above
   }
-  return await User.findOne({
-    _id: decoded._id,
-    'tokens.token': token,
-    'tokens.access': 'auth'
-  });
 };
-
 UserSchema.statics.findByCredentials = async function (email, password) {
   try {
     const user = await this.findOne({ email });
