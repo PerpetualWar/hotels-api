@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(cors());
 
 // add new hotel
-app.post('/hotel_api', async (req, res) => {
+app.post('/hotel_api', authenticate, async (req, res) => {
   console.log(req.body)
   const hotel = new Hotel({
     name: req.body.name,
@@ -28,10 +28,14 @@ app.post('/hotel_api', async (req, res) => {
     city: req.body.city,
     country: req.body.country,
     stars: req.body.stars,
-    price: req.body.price
+    price: req.body.price,
+    reviews: req.body.reviews
   });
 
   try {
+    const hotelName = await Hotel.findOne({ name: req.body.name });
+    if (hotelName)
+      return res.status(400).send({ message: 'Hotel with that name already exist' });
     const doc = await hotel.save();
     res.send(doc);
   } catch (e) {
@@ -40,7 +44,7 @@ app.post('/hotel_api', async (req, res) => {
 });
 
 //get all hotels
-app.get('/hotel_api', async (req, res) => {
+app.get('/hotel_api', authenticate, async (req, res) => {
   try {
     const doc = await Hotel.find();
     res.send(doc)
@@ -50,7 +54,7 @@ app.get('/hotel_api', async (req, res) => {
 });
 
 // get specific hotel based on id
-app.get('/hotel_api/:id', async (req, res) => {
+app.get('/hotel_api/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   // if (!ObjectID.isValid(id)) {
@@ -67,7 +71,7 @@ app.get('/hotel_api/:id', async (req, res) => {
 });
 
 // delete specific hotel
-app.delete('/hotel_api/:id', async (req, res) => {
+app.delete('/hotel_api/:id', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
     const doc = await Hotel.findByIdAndRemove(id);
@@ -77,6 +81,21 @@ app.delete('/hotel_api/:id', async (req, res) => {
   } catch (e) {
     res.status(400).send(e);
   }
+});
+
+// get hotel reviews
+app.get('/hotel_api/get_hotel_reviews/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const doc = await Hotel.findById(id);
+    if (!doc)
+      return res.status(404).send({ message: 'Item with that ID does not exist' });
+    console.log(doc);
+    res.send(doc.reviews);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+
 });
 
 //register new user
@@ -127,22 +146,19 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
     if (req.body.is_favorite === 'true') {
       // add to db
       const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
-      console.log(hotel);
-      if (!hotel) {
-        const doc = await favorites.save();
-        res.send(doc);
-      } else {
+      if (hotel)
         return res.status(400).send({ message: 'hotel already added' });
-      }
+      const doc = await favorites.save();
+      res.send(doc);
+
     } else if (req.body.is_favorite === 'false') {
       // delete from db
       const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
-      if (hotel) {
-        const doc = await Favorites.remove({ hotel_id: req.body.hotel_id });
-        res.send(doc);
-      } else {
+      if (!hotel)
         return res.status(400).send({ message: 'hotel does not exist' });
-      }
+      const doc = await Favorites.remove({ hotel_id: req.body.hotel_id });
+      res.send(doc);
+
     }
   } catch (e) {
     res.status(400).send('from catch')

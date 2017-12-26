@@ -14,11 +14,7 @@ const Favorites = mongoose.model('Favorites', {
   _userid: {
     type: mongoose.Schema.Types.ObjectId,
     required: true
-  },
-  // _hotelid: {
-  //   type: mongoose.Schema.Types.ObjectId,
-    // required: true
-  // }
+  }
 });
 
 module.exports = { Favorites };

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+const _ = require('lodash');
 
-const Hotel = mongoose.model('Hotel', {
+const HotelSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -36,7 +37,17 @@ const Hotel = mongoose.model('Hotel', {
     required: true,
     minlength: 1,
     trim: true
+  },
+  reviews: {
+    type: Array,
   }
 });
+
+HotelSchema.methods.toJSON = function () {
+  const hotelObject = this.toObject();
+  return _.pick(hotelObject, ['_id', 'name', 'description', 'city', 'country', 'stars', 'price']);
+};
+
+const Hotel = mongoose.model('Hotel', HotelSchema);
 
 module.exports = { Hotel };
