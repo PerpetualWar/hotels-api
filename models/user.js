@@ -77,10 +77,7 @@ UserSchema.statics.findByToken = async function (token) { // adding custom model
       'tokens.access': 'auth'
     });
   } catch (e) {
-    // return new Promise((resolve, reject) => { //valid promise call
-    //   reject();
-    // })
-    return Promise.reject(); // shorthand for the above
+    return Promise.reject();
   }
 };
 UserSchema.statics.findByCredentials = async function (email, password) {

@@ -1,5 +1,4 @@
 const express = require('express');
-// const bodyParser = require('body-parser');
 const cors = require('cors');
 const _ = require('lodash');
 
@@ -7,6 +6,7 @@ const { mongoose } = require('./db/mongoose');
 const { ObjectID } = require('mongodb');
 const { Hotel } = require('./models/hotel');
 const { User } = require('./models/user');
+const { Favorites } = require('./models/favorites');
 const { authenticate } = require('./middleware/authenticate');
 const { asyncErrorHandler } = require('./middleware/errorHandler');
 
@@ -15,8 +15,6 @@ const port = 8080;
 
 //middlewares
 app.disable('x-powered-by');
-// app.use(bodyParser.urlencoded({extended: true}));
-// app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
@@ -58,9 +56,6 @@ app.get('/hotel_api/:id', async (req, res) => {
   // if (!ObjectID.isValid(id)) {
   //   return res.status(404).send({ message: 'Item with that ID does not exist' });
   // }
-  // Hotel.findById(id).then(doc => {
-  //   res.send(doc);
-  // }).catch(e => res.status(400).send(e));
   try {
     const doc = await Hotel.findById(id);
     if (!doc)
@@ -84,9 +79,9 @@ app.delete('/hotel_api/:id', async (req, res) => {
   }
 });
 
+//register new user
 app.post('/register', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
-  console.log(body);
   const user = new User(body);
   try {
     const savedUser = await user.save();
@@ -112,20 +107,57 @@ app.post('/api-token-auth', async (req, res) => {
   }
 });
 
-app.delete('/users/me/token', authenticate, async (req, res) => {
+app.delete('/logout', authenticate, async (req, res) => {
   try {
     await req.user.removeToken(req.token);
     res.status(200).send();
   } catch (e) {
     res.status(400).send();
   }
-  // debugger
-//   req.user.removeToken(req.token).then(() => {
-//     rest.status(200).send();
-//   }).catch((e) => {
-//     console.log(e)
-//     res.status(400).send();
-//   });
+});
+
+app.post('/favorites/add_remove', authenticate, async (req, res) => {
+  // console.log(req.body)
+  const favorites = new Favorites({
+    hotel_id: req.body.hotel_id,
+    is_favorite: req.body.is_favorite,
+    _userid: req.user._id
+  });
+  try {
+    if (req.body.is_favorite === 'true') {
+      // add to db
+      const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
+      console.log(hotel);
+      if (!hotel) {
+        const doc = await favorites.save();
+        res.send(doc);
+      } else {
+        return res.status(400).send({ message: 'hotel already added' });
+      }
+    } else if (req.body.is_favorite === 'false') {
+      // delete from db
+      const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
+      if (hotel) {
+        const doc = await Favorites.remove({ hotel_id: req.body.hotel_id });
+        res.send(doc);
+      } else {
+        return res.status(400).send({ message: 'hotel does not exist' });
+      }
+    }
+  } catch (e) {
+    res.status(400).send('from catch')
+  }
+});
+
+app.get('/favorites', authenticate, async (req, res) => {
+  try {
+    const doc = await Favorites.find({
+      _userid: req.user._id
+    });
+    res.send(doc);
+  } catch (e) {
+    res.status(400).send();
+  }
 });
 
 app.use(function (error, req, res, next) {
@@ -136,3 +168,5 @@ app.use(function (error, req, res, next) {
 app.listen(port, () => {
   console.log(`Server started at port ${port}`);
 });
+
+module.exports = { app }
