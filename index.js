@@ -100,7 +100,7 @@ app.get('/hotel_api/get_hotel_reviews/:id', authenticate, async (req, res) => {
 });
 
 //register new user
-app.post('/register', asyncErrorHandler(async (req, res) => {
+app.post('/register', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
   const user = new User(body);
   try {
@@ -110,7 +110,7 @@ app.post('/register', asyncErrorHandler(async (req, res) => {
   } catch (e) {
     res.status(400).send(e);
   }
-}));
+});
 
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
