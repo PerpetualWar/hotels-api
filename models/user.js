@@ -41,7 +41,7 @@ UserSchema.methods.toJSON = function () {
 
 UserSchema.methods.generateAuthToken = async function () { //adding custom method to instances of models
   const access = 'auth';
-  const token = jwt.sign({ _id: this._id.toHexString(), access }, 'bleh').toString();
+  const token = jwt.sign({ _id: this._id.toHexString(), access }, process.env.JWT_SECRET).toString();
 
   this.tokens.push({ access, token });
 
@@ -70,7 +70,7 @@ UserSchema.statics.findByToken = async function (token) { // adding custom model
   let decoded;
 
   try {
-    decoded = jwt.verify(token, 'bleh');
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
     return await this.findOne({
       _id: decoded._id,
       'tokens.token': token,
