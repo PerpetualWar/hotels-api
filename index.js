@@ -11,7 +11,7 @@ const { authenticate } = require('./middleware/authenticate');
 const { asyncErrorHandler } = require('./middleware/errorHandler');
 
 const app = express();
-const port = 8080;
+const port = process.env.PORT;
 
 //middlewares
 app.disable('x-powered-by');
