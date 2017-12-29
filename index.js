@@ -1,3 +1,5 @@
+require('./config/config');
+
 const express = require('express');
 const cors = require('cors');
 const _ = require('lodash');
@@ -176,8 +178,8 @@ app.get('/favorites', authenticate, async (req, res) => {
   }
 });
 
+// Gets called because of `asyncErrorHandler()` middleware
 app.use(function (error, req, res, next) {
-  // Gets called because of `asyncErrorHandler()` middleware
   res.json({ message: error.message });
 });
 
