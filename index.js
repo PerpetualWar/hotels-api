@@ -2,8 +2,8 @@ require('./config/config');
 
 const express = require('express');
 const fs = require('fs');
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+// const multer = require('multer');
+// const upload = multer({ dest: 'uploads/' });
 const cors = require('cors');
 const _ = require('lodash');
 
@@ -25,7 +25,7 @@ app.use(express.json());
 app.use(cors());
 
 // add new hotel
-app.post('/hotel_api', authenticate, upload.single('image'), async (req, res) => {
+app.post('/hotel_api', authenticate, async (req, res) => {
   console.log(req.file)
   const hotel = new Hotel({
     name: req.body.name,
