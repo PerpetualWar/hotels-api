@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors());
 
 // add new hotel
-app.post('/hotel_api', authenticate, async (req, res) => {
+app.post('/hotel_api', async (req, res) => {
   const hotel = new Hotel({
     name: req.body.name,
     description: req.body.description,
@@ -49,7 +49,7 @@ app.post('/hotel_api', authenticate, async (req, res) => {
 });
 
 //get all hotels
-app.get('/hotel_api', authenticate, async (req, res) => {
+app.get('/hotel_api', async (req, res) => {
   try {
     const doc = await Hotel.find({});
     res.send(doc)
