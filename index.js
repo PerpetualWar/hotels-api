@@ -2,13 +2,11 @@ require('./config/config');
 
 const express = require('express');
 const fs = require('fs');
-// const multer = require('multer');
-// const upload = multer({ dest: 'uploads/' });
 const cors = require('cors');
 const _ = require('lodash');
+const { ObjectID } = require('mongodb');
 
 const { mongoose } = require('./db/mongoose');
-const { ObjectID } = require('mongodb');
 const { Hotel } = require('./models/hotel');
 const { User } = require('./models/user');
 const { Favorites } = require('./models/favorites');
@@ -26,7 +24,6 @@ app.use(cors());
 
 // add new hotel
 app.post('/hotel_api', authenticate, async (req, res) => {
-  console.log(req.file)
   const hotel = new Hotel({
     name: req.body.name,
     description: req.body.description,
@@ -55,16 +52,6 @@ app.post('/hotel_api', authenticate, async (req, res) => {
 app.get('/hotel_api', authenticate, async (req, res) => {
   try {
     const doc = await Hotel.find({});
-    
-    // middleware to convert binary to pic format
-    const docReady = doc.map(hotel => {
-      // const image =  "data:image/png;base64," + hotel.image.data;
-      // const base64EncodedStr = btoa(unescape(encodeURIComponent(hotel.image)));
-      // console.log(base64EncodedStr)
-      // hotel.image = base64EncodedStr;
-      return hotel;
-    })
-
     res.send(doc)
   } catch (e) {
     res.status(400).send(e)
@@ -108,7 +95,6 @@ app.get('/hotel_api/get_hotel_reviews/:id', authenticate, async (req, res) => {
     const doc = await Hotel.findById(id);
     if (!doc)
       return res.status(404).send({ message: 'Item with that ID does not exist' });
-    // console.log(doc);
     res.send(doc.reviews);
   } catch (e) {
     res.status(400).send(e);
@@ -117,7 +103,6 @@ app.get('/hotel_api/get_hotel_reviews/:id', authenticate, async (req, res) => {
 
 //register new user
 app.post('/register', async (req, res) => {
-  console.log(req.body)
   const body = _.pick(req.body, ['email', 'password']);
   const user = new User(body);
   try {
@@ -138,7 +123,6 @@ app.post('/api-token-auth', async (req, res) => {
   try {
     const user = await User.findByCredentials(body.email, body.password);
     const token = await user.generateAuthToken();
-    // console.log(token)
     res.header('Authorization', token).send({ user, token });
   } catch (e) {
     res.status(400).send();
@@ -155,7 +139,6 @@ app.delete('/logout', authenticate, async (req, res) => {
 });
 
 app.post('/favorites/add_remove', authenticate, async (req, res) => {
-  // console.log(req.body)
   const favorites = new Favorites({
     hotel_id: req.body.hotel_id,
     is_favorite: req.body.is_favorite,
