@@ -22,6 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
 
+app.get('/hello', (req, res) => {
+  //testing route
+  res.send('Hello there');
+})
 // add new hotel
 app.post('/hotel_api', async (req, res) => {
   const hotel = new Hotel({
