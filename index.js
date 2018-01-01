@@ -1,6 +1,9 @@
 require('./config/config');
 
 const express = require('express');
+const fs = require('fs');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 const cors = require('cors');
 const _ = require('lodash');
 
@@ -22,8 +25,8 @@ app.use(express.json());
 app.use(cors());
 
 // add new hotel
-app.post('/hotel_api', authenticate, async (req, res) => {
-  console.log(req.body)
+app.post('/hotel_api', authenticate, upload.single('image'), async (req, res) => {
+  console.log(req.file)
   const hotel = new Hotel({
     name: req.body.name,
     description: req.body.description,
@@ -31,7 +34,10 @@ app.post('/hotel_api', authenticate, async (req, res) => {
     country: req.body.country,
     stars: req.body.stars,
     price: req.body.price,
-    reviews: req.body.reviews
+    reviews: req.body.reviews,
+    location: req.body.location,
+    user: req.body.user,
+    image: req.body.image
   });
 
   try {
@@ -48,7 +54,17 @@ app.post('/hotel_api', authenticate, async (req, res) => {
 //get all hotels
 app.get('/hotel_api', authenticate, async (req, res) => {
   try {
-    const doc = await Hotel.find();
+    const doc = await Hotel.find({});
+    
+    // middleware to convert binary to pic format
+    const docReady = doc.map(hotel => {
+      // const image =  "data:image/png;base64," + hotel.image.data;
+      // const base64EncodedStr = btoa(unescape(encodeURIComponent(hotel.image)));
+      // console.log(base64EncodedStr)
+      // hotel.image = base64EncodedStr;
+      return hotel;
+    })
+
     res.send(doc)
   } catch (e) {
     res.status(400).send(e)
@@ -92,7 +108,7 @@ app.get('/hotel_api/get_hotel_reviews/:id', authenticate, async (req, res) => {
     const doc = await Hotel.findById(id);
     if (!doc)
       return res.status(404).send({ message: 'Item with that ID does not exist' });
-    console.log(doc);
+    // console.log(doc);
     res.send(doc.reviews);
   } catch (e) {
     res.status(400).send(e);
@@ -101,12 +117,13 @@ app.get('/hotel_api/get_hotel_reviews/:id', authenticate, async (req, res) => {
 
 //register new user
 app.post('/register', async (req, res) => {
+  console.log(req.body)
   const body = _.pick(req.body, ['email', 'password']);
   const user = new User(body);
   try {
     const savedUser = await user.save();
     const token = await user.generateAuthToken();
-    res.header('x-auth', token).send(savedUser);
+    res.header('Authorization', token).send(savedUser);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -121,7 +138,8 @@ app.post('/api-token-auth', async (req, res) => {
   try {
     const user = await User.findByCredentials(body.email, body.password);
     const token = await user.generateAuthToken();
-    res.header('x-auth', token).send(user);
+    // console.log(token)
+    res.header('Authorization', token).send({ user, token });
   } catch (e) {
     res.status(400).send();
   }
@@ -144,16 +162,18 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
     _userid: req.user._id
   });
   try {
-    if (req.body.is_favorite === 'true') {
+    if (req.body.is_favorite === 'true' || req.body.is_favorite === true) {
       // add to db
+      console.log('fav_true')
       const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
       if (hotel)
         return res.status(400).send({ message: 'hotel already added' });
       const doc = await favorites.save();
       res.send(doc);
 
-    } else if (req.body.is_favorite === 'false') {
+    } else if (req.body.is_favorite === 'false' || req.body.is_favorite === false) {
       // delete from db
+      console.log('fav_false')
       const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
       if (!hotel)
         return res.status(400).send({ message: 'hotel does not exist' });
@@ -167,11 +187,19 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
 });
 
 app.get('/favorites', authenticate, async (req, res) => {
+  console.log(req.user.id)
   try {
     const doc = await Favorites.find({
       _userid: req.user._id
     });
-    res.send(doc);
+    let hotels = [];
+
+    await Promise.all(doc.map(async favorite => {
+      const [hotel] = await Hotel.find({ _id: favorite.hotel_id });
+      console.log(hotel)
+      hotels.push(hotel)
+    }));
+    res.send(hotels);
   } catch (e) {
     res.status(400).send();
   }

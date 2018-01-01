@@ -36,7 +36,8 @@ const UserSchema = new mongoose.Schema({
 
 UserSchema.methods.toJSON = function () {
   const userObject = this.toObject();
-  return _.pick(userObject, ['_id', 'email']);
+  userObject.id = userObject._id;
+  return _.pick(userObject, ['id', 'email']);
 };
 
 UserSchema.methods.generateAuthToken = async function () { //adding custom method to instances of models
@@ -83,12 +84,12 @@ UserSchema.statics.findByToken = async function (token) { // adding custom model
 UserSchema.statics.findByCredentials = async function (email, password) {
   try {
     const user = await this.findOne({ email });
-    console.log(this)
+    // console.log(this)
     if (!user)
       return Promise.reject();
     return new Promise((resolve, reject) => {
       bcrypt.compare(password, user.password, (err, res) => {
-        console.log(res)
+        // console.log(res)
         if (res) {
           resolve(user);
         } else {
