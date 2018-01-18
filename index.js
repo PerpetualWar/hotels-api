@@ -149,7 +149,7 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
     if (req.body.is_favorite === 'true' || req.body.is_favorite === true) {
       // add to db
       console.log('fav_true')
-      const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
+      const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id, _userid: req.user._id });
       console.log(hotel);
       if (hotel)
         return res.status(400).send({ message: 'hotel already added' });
@@ -159,7 +159,7 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
     } else if (req.body.is_favorite === 'false' || req.body.is_favorite === false) {
       // delete from db
       console.log('fav_false')
-      const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
+      const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id, _userid: req.user._id });
       if (!hotel)
         return res.status(400).send({ message: 'hotel does not exist' });
       const doc = await Favorites.remove({ hotel_id: req.body.hotel_id });
