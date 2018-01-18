@@ -162,7 +162,7 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
       const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id, _userid: req.user._id });
       if (!hotel)
         return res.status(400).send({ message: 'hotel does not exist' });
-      const doc = await Favorites.remove({ hotel_id: req.body.hotel_id });
+      const doc = await Favorites.remove({ hotel_id: req.body.hotel_id, _userid: req.user._id });
       res.send(doc);
 
     }
