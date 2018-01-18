@@ -139,6 +139,7 @@ app.delete('/logout', authenticate, async (req, res) => {
 });
 
 app.post('/favorites/add_remove', authenticate, async (req, res) => {
+  console.log(req.body);
   const favorites = new Favorites({
     hotel_id: req.body.hotel_id,
     is_favorite: req.body.is_favorite,
@@ -170,7 +171,7 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
 });
 
 app.get('/favorites', authenticate, async (req, res) => {
-  console.log(req.user.id)
+  // console.log(req.user.id)
   try {
     const doc = await Favorites.find({
       _userid: req.user._id
@@ -179,7 +180,7 @@ app.get('/favorites', authenticate, async (req, res) => {
 
     await Promise.all(doc.map(async favorite => {
       const [hotel] = await Hotel.find({ _id: favorite.hotel_id });
-      console.log(hotel)
+      // console.log(hotel)
       hotels.push(hotel)
     }));
     res.send(hotels);
