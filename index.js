@@ -150,6 +150,7 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
       // add to db
       console.log('fav_true')
       const hotel = await Favorites.findOne({ hotel_id: req.body.hotel_id });
+      console.log(hotel);
       if (hotel)
         return res.status(400).send({ message: 'hotel already added' });
       const doc = await favorites.save();
@@ -166,7 +167,7 @@ app.post('/favorites/add_remove', authenticate, async (req, res) => {
 
     }
   } catch (e) {
-    res.status(400).send('from catch')
+    res.status(500).send();
   }
 });
 
